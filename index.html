@@ -2253,21 +2253,59 @@ function closeModal(){
   modal.classList.remove("show");
 }
 
-// ===== SHARE DUA AS IMAGE (Full Card, WhatsApp Only) =====
+// ===== SHOW/HIDE LOADING OVERLAY =====
+function showLoading(message = 'Processing...') {
+  let overlay = document.getElementById('loadingOverlay');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'loadingOverlay';
+    overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 10000;
+      font-family: 'Poppins', sans-serif;
+    `;
+    overlay.innerHTML = `
+      <div style="font-size: 40px; margin-bottom: 15px;">⏳</div>
+      <div id="loadingMessage" style="color: white; font-size: 16px;">${message}</div>
+    `;
+    document.body.appendChild(overlay);
+  } else {
+    document.getElementById('loadingMessage').textContent = message;
+    overlay.style.display = 'flex';
+  }
+}
+
+function hideLoading() {
+  const overlay = document.getElementById('loadingOverlay');
+  if (overlay) {
+    overlay.style.display = 'none';
+  }
+}
+
+// ===== SHARE DUA AS IMAGE (Optimized for Speed) =====
 async function shareDuaAsImage(day) {
   const data = duas.find(d => d.day === day);
   
   if (typeof html2canvas === 'undefined') {
-    // Fallback to text if html2canvas not available
     shareDuaText(day);
     return;
   }
+  
+  // Show loading indicator
+  showLoading('Preparing your Dua card...');
   
   // Get the capture container and card
   const captureContainer = document.getElementById('duaCardCaptureContainer');
   const captureCard = document.getElementById('duaCardCapture');
   
   if (!captureCard || !captureContainer) {
+    hideLoading();
     shareDuaText(day);
     return;
   }
@@ -2292,43 +2330,28 @@ async function shareDuaAsImage(day) {
     captureCard.classList.remove('light-mode-capture');
   }
   
-  // Temporarily make container visible for rendering (but off-screen)
-  captureContainer.style.left = '0px';
-  captureContainer.style.position = 'fixed';
-  captureContainer.style.top = '0px';
-  captureContainer.style.zIndex = '-9999';
-  captureContainer.style.opacity = '1';
+  // Temporarily make container visible for rendering
+  captureContainer.style.cssText = 'position: fixed; left: 0; top: 0; width: 480px; z-index: -9999; opacity: 1;';
   
   try {
     // Wait for DOM to update
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 50));
     
-    // Capture the full card (entire height, no cropping)
+    // Capture the card with optimized settings
     const canvas = await html2canvas(captureCard, {
       backgroundColor: isLightMode ? '#f8f4e8' : '#071327',
-      scale: 3, // High resolution
+      scale: 2, // Reduced from 3 for faster rendering
       useCORS: true,
       logging: false,
       allowTaint: true,
-      foreignObjectRendering: false,
       scrollY: 0,
       scrollX: 0,
-      windowHeight: captureCard.scrollHeight + 100,
-      windowWidth: captureCard.scrollWidth + 40,
       onclone: function(clonedDoc) {
         const clonedCard = clonedDoc.getElementById('duaCardCapture');
         if (clonedCard) {
-          // Ensure all animations are paused on clone
           clonedCard.style.animation = 'none';
           clonedCard.style.maxHeight = 'none';
           clonedCard.style.overflow = 'visible';
-          
-          const allAnimated = clonedCard.querySelectorAll('*');
-          allAnimated.forEach(el => {
-            el.style.animation = 'none';
-          });
-          
-          // Apply theme-specific background
           if (isLightMode) {
             clonedCard.style.background = 'linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%)';
           } else {
@@ -2338,34 +2361,38 @@ async function shareDuaAsImage(day) {
       }
     });
     
-    // Hide container again
+    // Hide container
     captureContainer.style.left = '-9999px';
-    captureContainer.style.position = 'fixed';
     
-    // Convert to blob
+    // Convert to blob with lower quality for faster sharing
     canvas.toBlob(async (blob) => {
       if (!blob) {
+        hideLoading();
         shareDuaText(day);
         return;
       }
       
-      // Try Web Share API with files first (this works for WhatsApp on mobile)
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'test.png', { type: 'image/png' })] })) {
+      // Check if Web Share API supports files
+      const canShareFiles = navigator.share && navigator.canShare && 
+        navigator.canShare({ files: [new File([blob], 'test.png', { type: 'image/png' })] });
+      
+      if (canShareFiles) {
         try {
           const file = new File([blob], `ramadan-day-${day}.png`, { type: 'image/png' });
-          await navigator.share({
-            files: [file]
-          });
+          hideLoading();
+          await navigator.share({ files: [file] });
           return;
         } catch (e) {
-          // User cancelled or error - fall through to download
           if (e.name === 'AbortError') {
+            hideLoading();
             return; // User cancelled
           }
+          // Fall through to download
         }
       }
       
       // Fallback: download the image
+      hideLoading();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -2374,12 +2401,12 @@ async function shareDuaAsImage(day) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    }, 'image/png', 1.0);
+    }, 'image/png', 0.9); // Slightly lower quality for faster processing
     
   } catch (e) {
     console.error('Error generating dua card image:', e);
-    // Hide container on error
     captureContainer.style.left = '-9999px';
+    hideLoading();
     shareDuaText(day);
   }
 }
@@ -2447,13 +2474,16 @@ function updateEidName() {
   }
 }
 
-// ===== SHARE EID CARD AS IMAGE =====
+// ===== SHARE EID CARD AS IMAGE (Optimized for Speed) =====
 async function shareEidAsImage() {
   // Check if html2canvas is available
   if (typeof html2canvas === 'undefined') {
     shareEidText();
     return;
   }
+  
+  // Show loading indicator
+  showLoading('Preparing your Eid card...');
   
   // Get the name from input
   const nameInput = document.getElementById('eidNameInput');
@@ -2465,6 +2495,7 @@ async function shareEidAsImage() {
   const captureName = document.getElementById('eidFromNameCapture');
   
   if (!captureCard || !captureContainer) {
+    hideLoading();
     shareEidText();
     return;
   }
@@ -2481,37 +2512,26 @@ async function shareEidAsImage() {
     captureCard.classList.remove('light-mode-capture');
   }
   
-  // Temporarily make container visible for rendering (but off-screen)
-  captureContainer.style.left = '0px';
-  captureContainer.style.position = 'fixed';
-  captureContainer.style.top = '0px';
-  captureContainer.style.zIndex = '-9999';
-  captureContainer.style.opacity = '1';
+  // Temporarily make container visible for rendering
+  captureContainer.style.cssText = 'position: fixed; left: 0; top: 0; width: 520px; z-index: -9999; opacity: 1;';
   
   try {
     // Wait for DOM to update
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 50));
     
-    // Capture the card
+    // Capture the card with optimized settings
     const canvas = await html2canvas(captureCard, {
       backgroundColor: isLightMode ? '#f8f4e8' : '#071327',
-      scale: 3, // Higher resolution
+      scale: 2, // Reduced from 3 for faster rendering
       useCORS: true,
       logging: false,
       allowTaint: true,
-      foreignObjectRendering: false,
-      // Ensure the element is rendered properly
+      scrollY: 0,
+      scrollX: 0,
       onclone: function(clonedDoc) {
         const clonedCard = clonedDoc.getElementById('eidCardCapture');
         if (clonedCard) {
-          // Ensure all animations are paused on clone
           clonedCard.style.animation = 'none';
-          const allAnimated = clonedCard.querySelectorAll('*');
-          allAnimated.forEach(el => {
-            el.style.animation = 'none';
-          });
-          
-          // Apply theme-specific background
           if (isLightMode) {
             clonedCard.style.background = 'linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%)';
           } else {
@@ -2521,36 +2541,40 @@ async function shareEidAsImage() {
       }
     });
     
-    // Hide container again
+    // Hide container
     captureContainer.style.left = '-9999px';
-    captureContainer.style.position = 'fixed';
     
-    // Convert to blob
+    // Convert to blob with slightly lower quality for faster processing
     canvas.toBlob(async (blob) => {
       if (!blob) {
+        hideLoading();
         shareEidText();
         return;
       }
       
       const nameSuffix = userName ? `-${userName.replace(/\s+/g, '-')}` : '';
       
-      // Try Web Share API first
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'test.png', { type: 'image/png' })] })) {
+      // Check if Web Share API supports files
+      const canShareFiles = navigator.share && navigator.canShare && 
+        navigator.canShare({ files: [new File([blob], 'test.png', { type: 'image/png' })] });
+      
+      if (canShareFiles) {
         try {
           const file = new File([blob], `eid-mubarak${nameSuffix}.png`, { type: 'image/png' });
-          await navigator.share({
-            files: [file]
-          });
+          hideLoading();
+          await navigator.share({ files: [file] });
           return;
         } catch (e) {
-          // User cancelled or error - fall through to download
           if (e.name === 'AbortError') {
-            return; // User cancelled, don't download
+            hideLoading();
+            return; // User cancelled
           }
+          // Fall through to download
         }
       }
       
       // Fallback: download the image
+      hideLoading();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -2559,12 +2583,12 @@ async function shareEidAsImage() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-    }, 'image/png', 1.0);
+    }, 'image/png', 0.9); // Slightly lower quality for faster processing
     
   } catch (e) {
     console.error('Error generating Eid card image:', e);
-    // Hide container on error
     captureContainer.style.left = '-9999px';
+    hideLoading();
     shareEidText();
   }
 }
