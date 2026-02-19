@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="theme-color" content="#0b1d3a">
+<link rel="manifest" href="manifest.json">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ramadan Kareem Calendar</title>
+
+<!-- html2canvas for sharing cards as images -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Playfair+Display:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg-dark:#050a15;
+  --bg-gradient:linear-gradient(180deg, #0a1628 0%, #071327 50%, #050a15 100%);
+  --gold:#d4af37;
+  --gold-soft:#f1d27a;
+  --gold-glow:rgba(212,175,55,0.4);
+  --primary-dark:#0a1628;
+  --text-light:#ffffff;
+  --text-primary:#ffffff;
+  --modal-bg:linear-gradient(145deg, #0d2b5a 0%, #071327 100%);
+  --door-bg:linear-gradient(145deg, #2a1810 0%, #1a0f0a 100%);
+  --door-opened-bg:linear-gradient(145deg, #3d321a 0%, #28240d 100%);
+  
+  /* ===== IMPROVED LIGHT MODE COLORS - WCAG COMPLIANT ===== */
+  --light-bg-gradient:linear-gradient(180deg, #e8dcc4 0%, #d4c8b0 50%, #c9bda5 100%);
+  --light-text-primary:#1a2e1a;
+  --light-heading:#8B6914;
+  --light-gold:#8B6914;
+  --light-gold-soft:#423509;
+  --light-progress-bg:rgba(45, 80, 45, 0.15);
+  --light-progress-fill:linear-gradient(90deg, #62511f, #927619, #ccac45);
+  --light-door-title:#f6f8f6;
+  --light-modal-bg:linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%);
+  
+  /* ============================================
+     DOOR MESSAGE BACKGROUND COLOR – EDITABLE
+     Deep navy blue with gold glow for elegance
+     Change this value to customize the color
+     ============================================ */
+  --door-message-bg: linear-gradient(145deg, rgba(74, 103, 154, 0.95) 0%, rgba(5, 24, 54, 0.98) 100%);
+  
+  /* ============================================
+     DOOR OPENED CONTENT STYLING - EDITABLE
+     Thin subtle border and soft golden glow
+     ============================================ */
+  --door-opened-border: 1px solid rgba(212, 175, 55, 0.25);
+  --door-opened-glow: 0 0 10px rgba(212, 175, 55, 0.2);
+  
+  /* Door image for night mode (bluish door) */
+  --door-image-url: url('door-night.jpeg');
+}
+
+/* ========== DAY MODE THEME ========== */
+body.light-mode{
+  --bg-gradient:var(--light-bg-gradient);
+  --text-primary:var(--light-text-primary);
+  --modal-bg:var(--light-modal-bg);
+  --door-bg:linear-gradient(145deg, #8B4513 0%, #654321 100%);
+  --door-opened-bg:linear-gradient(145deg, #9a8f74 0%, #8d8c49 100%);
+  
+  /* Door message background color – Light mode version (soft brown/skin-toned, no green) */
+  --door-message-bg: linear-gradient(145deg, rgba(235, 225, 205, 0.95) 0%, rgba(220, 208, 185, 0.98) 100%);
+  
+  /* Door opened content styling - Light mode (same soft golden glow) */
+  --door-opened-border: 1px solid rgba(139, 105, 20, 0.25);
+  --door-opened-glow: 0 0 10px rgba(212, 175, 55, 0.2);
+  
+  /* Door image for day mode (brown/skin-toned door) */
+  --door-image-url: url('door-day.jpeg');
+}
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+html, body{
+  width:100%;
+  min-height:100vh;
+}
+
+body{
+  font-family:'Poppins',sans-serif;
+  background:var(--bg-gradient);
+  color:var(--text-primary);
+  overflow-x:hidden;
+  position:relative;
+  transition:background 0.5s ease, color 0.5s ease;
+}
+
+/* ========== BACKGROUND DECORATIONS ========== */
+.bg-decorations{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+  overflow:hidden;
+}
+
+/* Gradient Overlay */
+.bg-decorations::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(212,175,55,0.08) 0%, transparent 60%);
+}
+
+body.light-mode .bg-decorations::before{
+  background:radial-gradient(ellipse at 50% 0%, rgba(139,105,20,0.12) 0%, transparent 60%);
+}
+
+/* Stars Background */
+.stars-container{
+  position:absolute;
+  inset:0;
+}
+
+body.light-mode .stars-container{
+  opacity:0.2;
+}
+
+.star{
+  position:absolute;
+  background:white;
+  border-radius:50%;
+  animation:twinkle 3s infinite ease-in-out;
+}
+
+@keyframes twinkle{
+  0%,100%{opacity:0.2;transform:scale(0.8);}
+  50%{opacity:1;transform:scale(1.2);}
+}
+
+/* ========== DECORATIVE HANGING LIGHTS AT TOP ========== */
+.top-lights-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  z-index: 5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.lights-wire {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    rgba(212,175,55,0.3) 10%, 
+    rgba(212,175,55,0.5) 50%, 
+    rgba(212,175,55,0.3) 90%, 
+    transparent 100%);
+}
+
+.hanging-light {
+  position: absolute;
+  top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: lightSwing 3s ease-in-out infinite;
+}
+
+.light-string-line {
+  width: 1px;
+  height: 15px;
+  background: linear-gradient(180deg, rgba(212,175,55,0.6), rgba(212,175,55,0.2));
+}
+
+.light-bulb-decor {
+  width: 8px;
+  height: 12px;
+  border-radius: 0 0 50% 50%;
+  position: relative;
+}
+
+.light-bulb-decor::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 4px;
+  background: rgba(212,175,55,0.8);
+  border-radius: 2px 2px 0 0;
+}
+
+.light-bulb-decor.golden {
+  background: linear-gradient(180deg, #ffd700 0%, #ff8f00 100%);
+  box-shadow: 0 0 8px #ffd700, 0 0 16px rgba(255,215,0,0.5), 0 0 24px rgba(255,215,0,0.3);
+}
+
+.light-bulb-decor.warm {
+  background: linear-gradient(180deg, #ff9800 0%, #f57c00 100%);
+  box-shadow: 0 0 8px #ff9800, 0 0 16px rgba(255,152,0,0.5), 0 0 24px rgba(255,152,0,0.3);
+}
+
+.light-bulb-decor.amber {
+  background: linear-gradient(180deg, #ffca28 0%, #ff8f00 100%);
+  box-shadow: 0 0 8px #ffca28, 0 0 16px rgba(255,202,40,0.5), 0 0 24px rgba(255,202,40,0.3);
+}
+
+@keyframes lightSwing {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+body.light-mode .light-bulb-decor.golden {
+  box-shadow: 0 0 6px #ffd700, 0 0 12px rgba(255,215,0,0.4);
+}
+
+body.light-mode .light-bulb-decor.warm {
+  box-shadow: 0 0 6px #ff9800, 0 0 12px rgba(255,152,0,0.4);
+}
+
+body.light-mode .light-bulb-decor.amber {
+  box-shadow: 0 0 6px #ffca28, 0 0 12px rgba(255,202,40,0.4);
+}
+
+/* Crescent Moon */
+.crescent-moon{
+  position:absolute;
+  top:60px;
+  right:8%;
+  width:90px;
+  height:90px;
+  z-index: 2;
+}
+
+.crescent-moon::before{
+  content:'';
+  position:absolute;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  background:linear-gradient(135deg, #fffde7 0%, #fff59d 50%, #ffee58 100%);
+  box-shadow:
+    0 0 40px rgba(255,236,179,0.6),
+    0 0 80px rgba(255,236,179,0.4),
+    0 0 120px rgba(255,236,179,0.2);
+  animation:moonPulse 4s infinite ease-in-out;
+}
+
+.crescent-moon::after{
+  content:'';
+  position:absolute;
+  top:-8px;
+  left:-8px;
+  width:70%;
+  height:70%;
+  border-radius:50%;
+  background:var(--bg-dark);
+}
+
+body.light-mode .crescent-moon::after{
+  background:#e8dcc4;
+}
+
+@keyframes moonPulse{
+  0%,100%{box-shadow:0 0 40px rgba(255,236,179,0.6), 0 0 80px rgba(255,236,179,0.4);}
+  50%{box-shadow:0 0 60px rgba(255,236,179,0.8), 0 0 100px rgba(255,236,179,0.5);}
+}
+
+/* Elegant Lanterns - SVG Style */
+.lantern-wrapper{
+  position:absolute;
+  z-index:1;
+}
+
+.lantern{
+  animation:lanternSway 4s infinite ease-in-out;
+}
+
+.lantern-1{left:3%;top:10%;animation-delay:0s;}
+.lantern-2{right:3%;top:8%;animation-delay:1s;}
+.lantern-3{left:2%;top:45%;animation-delay:0.5s;}
+.lantern-4{right:2%;top:42%;animation-delay:1.5s;}
+.lantern-5{left:4%;top:75%;animation-delay:2s;}
+.lantern-6{right:4%;top:72%;animation-delay:2.5s;}
+
+@keyframes lanternSway{
+  0%,100%{transform:rotate(-3deg) translateY(0);}
+  50%{transform:rotate(3deg) translateY(-5px);}
+}
+
+/* Lantern SVG Glow */
+.lantern-glow{
+  filter:drop-shadow(0 0 15px rgba(255,183,77,0.7)) drop-shadow(0 0 30px rgba(255,183,77,0.4));
+}
+
+/* Mosque Silhouette at Bottom */
+.mosque-bg{
+  position:absolute;
+  bottom:0;
+  left:0;
+  right:0;
+  height:150px;
+  background:linear-gradient(to top, rgba(5,10,21,0.95) 0%, rgba(5,10,21,0.7) 40%, transparent 100%);
+}
+
+body.light-mode .mosque-bg{
+  background:linear-gradient(to top, rgba(139,119,101,0.4) 0%, rgba(139,119,101,0.2) 40%, transparent 100%);
+}
+
+.mosque-silhouette{
+  position:absolute;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:1200px;
+  height:120px;
+  opacity:0.15;
+  background-size:contain;
+  background-repeat:no-repeat;
+  background-position:bottom center;
+}
+
+/* ========== MAIN CONTENT ========== */
+.main-content{
+  position:relative;
+  z-index:10;
+  max-width:1400px;
+  margin:0 auto;
+  padding:20px;
+  padding-bottom:120px;
+}
+
+/* Header */
+header{
+  text-align:center;
+  padding:30px 20px 20px;
+}
+
+header h1{
+  font-family:'Amiri',serif;
+  font-size:clamp(40px,10vw,70px);
+  color:var(--gold);
+  margin:0;
+  text-shadow:0 0 40px var(--gold-glow);
+  font-weight:700;
+  letter-spacing:2px;
+}
+
+/* ===== LIGHT MODE HEADER - IMPROVED CONTRAST ===== */
+body.light-mode header h1{
+  color:var(--light-heading) !important;
+  text-shadow:0 2px 8px rgba(13,77,13,0.3), 0 0 30px rgba(13,77,13,0.2) !important;
+}
+
+header .arabic-text{
+  font-family:'Amiri',serif;
+  font-size:clamp(24px,5vw,36px);
+  color:var(--gold-soft);
+  margin:10px 0 5px;
+  text-shadow:0 0 20px rgba(177, 141, 25, 0.3);
+}
+
+body.light-mode header .arabic-text{
+  color:var(--light-gold) !important;
+  text-shadow:none !important;
+}
+
+header p{
+  font-family:'Playfair Display',serif;
+  letter-spacing:8px;
+  font-size:clamp(12px,2vw,16px);
+  margin-top:10px;
+  color:var(--gold-soft);
+  opacity:0.8;
+}
+
+body.light-mode header p{
+  color:var(--light-gold-soft) !important;
+}
+
+/* ========== CONTROL BUTTONS ========== */
+.controls{
+  position:fixed;
+  top:15px;
+  right:15px;
+  z-index:1000;
+  display:flex;
+  gap:10px;
+}
+
+.theme-toggle{
+  background:rgba(212,175,55,0.15);
+  border:1px solid rgba(212,175,55,0.5);
+  border-radius:30px;
+  padding:8px 16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:all 0.3s ease;
+  color:var(--gold);
+  font-size:13px;
+  font-family:'Poppins',sans-serif;
+}
+
+body.light-mode .theme-toggle{
+  background:rgba(45,80,45,0.15);
+  border-color:rgba(45,80,45,0.5);
+  color:var(--light-gold);
+}
+
+.theme-toggle:hover{
+  background:rgba(212,175,55,0.25);
+  border-color:var(--gold);
+}
+
+body.light-mode .theme-toggle:hover{
+  background:rgba(45,80,45,0.25);
+  border-color:var(--light-gold);
+}
+
+.reset-btn{
+  background:rgba(255,100,100,0.15);
+  border:1px solid rgba(255,100,100,0.4);
+  border-radius:30px;
+  padding:8px 16px;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  transition:all 0.3s ease;
+  color:#ff8a80;
+  font-size:13px;
+  font-family:'Poppins',sans-serif;
+}
+
+.reset-btn:hover{
+  background:rgba(255,100,100,0.25);
+}
+
+/* Day Badge */
+.current-day-badge{
+  position:fixed;
+  top:15px;
+  left:15px;
+  z-index:1000;
+  background:linear-gradient(135deg, var(--gold) 0%, #b8963a 100%);
+  color:#071327;
+  padding:10px 20px;
+  border-radius:30px;
+  font-weight:600;
+  font-size:13px;
+  box-shadow:0 4px 20px rgba(212,175,55,0.3);
+}
+
+/* ========== PROGRESS SECTION ========== */
+.progress-section{
+  width:100%;
+  max-width:600px;
+  margin:15px auto 25px;
+  padding:0 20px;
+}
+
+.progress-text{
+  text-align:center;
+  margin-bottom:8px;
+  font-size:13px;
+  color:var(--gold-soft);
+  font-weight:500;
+}
+
+/* ===== LIGHT MODE PROGRESS - IMPROVED CONTRAST ===== */
+body.light-mode .progress-text{
+  color:var(--light-gold) !important;
+  font-weight:600 !important;
+}
+
+.progress-container{
+  background:rgba(255,255,255,0.08);
+  border-radius:20px;
+  height:8px;
+  overflow:hidden;
+  border:1px solid rgba(212,175,55,0.2);
+}
+
+body.light-mode .progress-container{
+  background:var(--light-progress-bg) !important;
+  border-color:rgba(45,80,45,0.3) !important;
+}
+
+.progress-fill{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg, var(--gold), var(--gold-soft), var(--gold));
+  background-size:200% 100%;
+  border-radius:20px;
+  transition:width 0.6s ease;
+  animation:shimmer 2s infinite linear;
+}
+
+body.light-mode .progress-fill{
+  background:var(--light-progress-fill) !important;
+}
+
+@keyframes shimmer{
+  0%{background-position:200% 0;}
+  100%{background-position:-200% 0;}
+}
+
+/* ========== CALENDAR GRID ========== */
+.calendar{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:15px;
+  width:100%;
+  max-width:800px;
+  margin:0 auto;
+  padding:0 10px;
+}
+
+/* Responsive Grid */
+@media(max-width:900px){
+  .calendar{grid-template-columns:repeat(5,1fr);gap:12px;}
+}
+
+@media(max-width:600px){
+  .calendar{grid-template-columns:repeat(3,1fr);gap:10px;max-width:350px;}
+}
+
+@media(max-width:380px){
+  .calendar{grid-template-columns:repeat(3,1fr);gap:8px;}
+}
+
+/* ========== DOOR COMPONENT ========== */
+.door{
+  position:relative;
+  cursor:pointer;
+  perspective:1000px;
+}
+
+.door img{
+  width:100%;
+  border-radius:12px;
+  display:block;
+  transition:transform 0.8s;
+  transform-origin:left;
+}
+
+.door.opened img{
+  transform: rotateY(-120deg);
+}
+
+@keyframes doorFadeIn{
+  from{opacity:0;transform:scale(0.9);}
+  to{opacity:1;transform:scale(1);}
+}
+
+/* ========== SUBTLE GOLDEN GLOW BEHIND EACH DOOR ========== */
+.door::before{
+  content:'';
+  position:absolute;
+  inset:-2px;  /* Reduced from -5px - smaller glow area */
+  border-radius:14px;
+  background:radial-gradient(ellipse at center, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 40%, transparent 60%);  /* More subtle gradient */
+  z-index:-1;
+  opacity:0.5;  /* Reduced opacity */
+  transition:opacity 0.4s ease;
+  /* Removed animation for cleaner look */
+}
+
+@keyframes glowPulse{
+  0%,100%{opacity:0.5;transform:scale(1);}
+  50%{opacity:0.7;transform:scale(1.02);}
+}
+
+/* Subtle glow intensify on hover */
+.door:hover::before{
+  opacity:0.8;
+}
+
+body.light-mode .door::before{
+  background:radial-gradient(ellipse at center, rgba(139,105,20,0.15) 0%, rgba(139,105,20,0.05) 40%, transparent 60%);  /* Subtle light mode glow */
+}
+
+.door-inner{
+  position:relative;
+  width:100%;
+  height:100%;
+  transition:transform 1s ease-in-out;
+  transform-style:preserve-3d;
+}
+
+/* Door Image Container */
+.door-image-container{
+  position:relative;
+  width:100%;
+  height:100%;
+  border-radius:12px;
+  overflow:hidden;
+  background:var(--door-bg);
+  /* REMOVED the 1px border shadow - only keeping drop shadow */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition:all 0.4s ease;
+  min-height:80px;
+}
+
+/* Door Image - transforms from left like real door */
+.door-image-container img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+  transform-origin:left center;
+  transition:transform 1s ease-in-out, opacity 0.8s ease-in-out;
+  backface-visibility:hidden;
+}
+
+/* Door image animates and disappears when opened */
+.door.opened .door-image-container img{
+  transform:rotateY(-100deg);
+  opacity:0;
+  pointer-events:none;
+}
+
+/* Hover Effect - Subtle golden glow, no thick border */
+.door:hover:not(.opened) .door-image-container{
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(212, 175, 55, 0.3),  /* Thin 1px subtle gold hint */
+    0 0 20px rgba(212,175,55,0.2);  /* Soft outer glow */
+  transform:translateY(-2px);
+}
+
+/* Opened Door Style */
+.door.opened .door-image-container{
+  background:var(--door-opened-bg);
+  box-shadow:
+    0 4px 15px rgba(0,0,0,0.3),
+    0 0 15px rgba(212, 175, 55, 0.15);  /* Subtle golden glow for opened doors */
+}
+
+/* Day Label - Styled to look part of door */
+.day-label{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  font-family:'Playfair Display',serif;
+  font-weight:700;
+  font-size:clamp(24px,5vw,36px);
+  color:var(--gold);
+  text-shadow:
+    2px 2px 4px rgba(0,0,0,0.8),
+    0 0 20px var(--gold-glow),
+    0 0 40px var(--gold-glow);
+  pointer-events:none;
+  z-index:5;
+  letter-spacing:1px;
+  transition:all 0.5s ease;
+}
+
+/* ============================================
+   OPENED DOOR NUMBER VISIBILITY - EDITABLE
+   Clear visibility with theme-matching colors
+   ============================================ */
+.door.opened .day-label{
+  color:#f1d27a !important;
+  text-shadow:
+    2px 2px 4px rgba(0,0,0,0.9),
+    0 0 20px rgba(212, 175, 55, 0.9),
+    0 0 40px rgba(212, 175, 55, 0.6) !important;
+  font-size:clamp(20px,4vw,28px);
+}
+
+/* Light mode opened door number - high contrast on brown background */
+body.light-mode .door.opened .day-label{
+  color:#6b4c0a !important;
+  text-shadow:
+    1px 1px 3px rgba(255,255,255,0.9),
+    2px 2px 4px rgba(0,0,0,0.4) !important;
+}
+
+/* Check Icon */
+.check-icon{
+  position:absolute;
+  bottom:8px;
+  right:8px;
+  font-size:22px;
+  color:#2ecc71;
+  text-shadow:0 0 15px rgba(46,204,113,0.8);
+  z-index:10;
+  animation:checkPop 0.5s ease;
+}
+
+@keyframes checkPop{
+  0%{transform:scale(0);opacity:0;}
+  50%{transform:scale(1.3);}
+  100%{transform:scale(1);opacity:1;}
+}
+
+/* ============================================
+   EMOJI + MESSAGE INSIDE DOOR DIV - EDITABLE
+   Thin subtle border and soft golden glow
+   ============================================ */
+.door-opened-content{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:8px;
+  opacity:0;
+  transform:scale(0.8);
+  transition:opacity 0.5s ease 0.6s, transform 0.5s ease 0.6s;
+  z-index:15;
+  
+  /* Door message background color – uses CSS variables from :root */
+  background: var(--door-message-bg);
+  border-radius: 10px;
+  
+  /* Thin subtle border - EDITABLE via --door-opened-border */
+  border: var(--door-opened-border);
+  
+  /* Soft golden glow - EDITABLE via --door-opened-glow */
+  box-shadow: var(--door-opened-glow);
+  
+  margin: 3px;
+}
+
+.door.opened .door-opened-content{
+  opacity:1;
+  transform:scale(1);
+}
+
+.door-opened-emoji{
+  font-size:clamp(24px,5vw,32px);
+  margin-bottom:5px;
+  animation:emojiBounce 1s ease;
+}
+
+@keyframes emojiBounce{
+  0%{transform:scale(0) rotate(-20deg);}
+  50%{transform:scale(1.2) rotate(10deg);}
+  100%{transform:scale(1) rotate(0);}
+}
+
+.door-opened-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(8px,2vw,11px);
+  color:var(--gold-soft);
+  text-shadow:0 0 10px rgba(212,175,55,0.5);
+  line-height:1.3;
+  font-weight:500;
+}
+
+/* ===== LIGHT MODE DOOR TITLE - IMPROVED CONTRAST ===== */
+body.light-mode .door-opened-title{
+  color:#8B6914 !important;  /* Changed from var(--light-door-title) */
+  font-weight:600 !important;
+  text-shadow:none !important;
+}
+
+/* ========== FINAL SHARE CALENDAR SECTION (AT THE END) ========== */
+.final-share-section {
+  text-align: center;
+  margin: 60px auto 40px;
+  max-width: 600px;
+  padding: 0 20px;
+}
+
+.final-share-section .share-label {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px;
+  color: var(--gold-soft);
+  margin-bottom: 15px;
+  opacity: 0.8;
+}
+
+body.light-mode .final-share-section .share-label {
+  color: var(--light-gold);
+}
+
+.share-calendar-btn{
+  background:linear-gradient(135deg, #0d5a0d 0%, #1a4d1a 100%);
+  color:#fff;
+  padding:14px 32px;
+  font-size:15px;
+  border-radius:30px;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  border:none;
+  cursor:pointer;
+  font-family:'Poppins',sans-serif;
+  font-weight:600;
+  transition:all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(13,90,13,0.3);
+}
+
+.share-calendar-btn:hover{
+  transform:translateY(-3px);
+  box-shadow:0 10px 30px rgba(13,90,13,0.4);
+}
+
+body.light-mode .share-calendar-btn{
+  background:linear-gradient(135deg, #2d5a2d 0%, #1a4d1a 100%);
+}
+
+/* ========== MODAL ========== */
+#modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.9);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  z-index:2000;
+  backdrop-filter:blur(10px);
+}
+
+body.light-mode #modal{
+  background:rgba(245,241,230,0.95);
+}
+
+#modal.show{
+  display:flex;
+  animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+
+.modal-content{
+  background:var(--modal-bg);
+  padding:30px;
+  max-width:480px;
+  width:100%;
+  border-radius:20px;
+  border:2px solid var(--gold);
+  text-align:center;
+  color:var(--text-primary);
+  max-height:85vh;
+  overflow-y:auto;
+  box-shadow:
+    0 25px 80px rgba(0,0,0,0.7),
+    0 0 60px var(--gold-glow);
+  animation:modalSlide 0.4s ease;
+}
+
+@keyframes modalSlide{
+  from{transform:translateY(-40px) scale(0.95);opacity:0;}
+  to{transform:translateY(0) scale(1);opacity:1;}
+}
+
+.modal-day-badge{
+  display:inline-block;
+  background:linear-gradient(135deg, var(--gold) 0%, #b8963a 100%);
+  color:#071327;
+  padding:8px 24px;
+  border-radius:30px;
+  font-weight:600;
+  font-size:14px;
+  margin-bottom:15px;
+}
+
+/* Modal spiritual title styling */
+.modal-spiritual-title{
+  font-family:'Playfair Display',serif;
+  font-size:22px;
+  color:var(--gold);
+  margin-bottom:20px;
+  font-weight:600;
+  letter-spacing:1px;
+}
+
+body.light-mode .modal-spiritual-title{
+  color:var(--light-gold) !important;
+}
+
+.modal-content h2{
+  font-family:'Playfair Display',serif;
+  font-size:28px;
+  color:var(--gold);
+  margin-bottom:20px;
+}
+
+.modal-emoji-header{
+  font-size:40px;
+  margin-bottom:10px;
+}
+
+.arabic{
+  font-family:'Amiri',serif;
+  font-size:clamp(20px,4vw,26px);
+  direction:rtl;
+  margin:15px 0;
+  line-height:2;
+  color:var(--gold-soft);
+  padding:15px;
+  background:rgba(212,175,55,0.08);
+  border-radius:12px;
+  border:1px solid rgba(212,175,55,0.2);
+}
+
+body.light-mode .arabic{
+  background:rgba(139,105,20,0.1);
+  border-color:rgba(139,105,20,0.3);
+  color:var(--light-gold) !important;
+}
+
+.translit{
+  font-style:italic;
+  margin:12px 0;
+  color:rgba(255,255,255,0.7);
+  font-size:15px;
+}
+
+body.light-mode .translit{
+  color:rgba(26,46,26,0.7) !important;
+}
+
+.translation{
+  font-size:15px;
+  line-height:1.7;
+  margin:12px 0;
+  color:rgba(255,255,255,0.9);
+}
+
+body.light-mode .translation{
+  color:rgba(26,46,26,0.9) !important;
+}
+
+.reflection{
+  background:rgba(212,175,55,0.1);
+  padding:15px;
+  border-radius:12px;
+  border-left:3px solid var(--gold);
+  margin:15px 0;
+  font-style:italic;
+  text-align:left;
+  font-size:14px;
+  color:rgba(255,255,255,0.85);
+}
+
+body.light-mode .reflection{
+  background:rgba(45,80,45,0.1);
+  border-color:var(--light-gold);
+  color:rgba(26,46,26,0.85) !important;
+}
+
+.modal-buttons{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+
+button{
+  padding:12px 20px;
+  border:none;
+  cursor:pointer;
+  border-radius:30px;
+  font-weight:600;
+  font-size:13px;
+  transition:all 0.3s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-family:'Poppins',sans-serif;
+}
+
+.share-btn{
+  background:linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color:white;
+}
+
+.share-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(37,211,102,0.4);
+}
+
+.close-btn{
+  background:linear-gradient(135deg, var(--gold) 0%, #b8963a 100%);
+  color:#071327;
+}
+
+.close-btn:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 25px rgba(212,175,55,0.4);
+}
+
+.copy-btn{
+  background:rgba(255,255,255,0.1);
+  color:var(--text-primary);
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+body.light-mode .copy-btn{
+  background:rgba(45,80,45,0.1);
+  border-color:rgba(45,80,45,0.2);
+  color:var(--light-text-primary) !important;
+}
+
+.copy-btn:hover{
+  background:rgba(255,255,255,0.2);
+}
+
+body.light-mode .copy-btn:hover{
+  background:rgba(45,80,45,0.2);
+}
+
+.copy-success{
+  background:rgba(46,204,113,0.2) !important;
+  border-color:#2ecc71 !important;
+  color:#2ecc71 !important;
+}
+
+/* ========== WELCOME MODAL ========== */
+#welcomeModal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.95);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  z-index:3000;
+  padding:20px;
+  backdrop-filter:blur(10px);
+}
+
+body.light-mode #welcomeModal{
+  background:rgba(245,241,230,0.98);
+}
+
+#welcomeModal.show{
+  display:flex;
+  animation:fadeIn 0.5s ease;
+}
+
+.welcome-content{
+  background:var(--modal-bg);
+  padding:40px 30px;
+  max-width:400px;
+  width:100%;
+  border-radius:24px;
+  border:2px solid var(--gold);
+  text-align:center;
+  color:var(--text-primary);
+  box-shadow:0 0 80px var(--gold-glow);
+}
+
+.welcome-content h2{
+  font-family:'Amiri',serif;
+  font-size:36px;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+
+.welcome-content .subtitle{
+  font-family:'Playfair Display',serif;
+  font-size:18px;
+  color:var(--gold-soft);
+  margin-bottom:20px;
+}
+
+.welcome-content p{
+  margin:12px 0;
+  line-height:1.7;
+  font-size:14px;
+  color:rgba(255,255,255,0.85);
+}
+
+body.light-mode .welcome-content p{
+  color:rgba(0,0,0,0.75);
+}
+
+.welcome-icon{
+  font-size:70px;
+  margin-bottom:15px;
+  animation:float 3s infinite ease-in-out;
+}
+
+@keyframes float{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-10px);}
+}
+
+.start-btn{
+  background:linear-gradient(135deg, var(--gold) 0%, #b8963a 100%);
+  color:#071327;
+  padding:14px 40px;
+  font-size:16px;
+  margin-top:20px;
+  border-radius:30px;
+}
+
+.start-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 30px var(--gold-glow);
+}
+
+/* ========== ENHANCED EID MUBARAK CELEBRATION CARD ========== */
+#eidCelebration{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.95);
+  display:none;
+  justify-content:center;
+  align-items:flex-start;
+  z-index:5000;
+  padding:20px;
+  padding-top: 30px;
+  padding-bottom: 30px;
+  backdrop-filter:blur(15px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+body.light-mode #eidCelebration{
+  background:rgba(245,241,230,0.98);
+}
+
+#eidCelebration.show{
+  display:flex;
+  animation:celebrationFade 0.8s ease;
+}
+
+@keyframes celebrationFade{
+  0%{opacity:0;}
+  100%{opacity:1;}
+}
+
+.eid-card-container {
+  position: relative;
+  max-width: 520px;
+  width: 100%;
+  margin: auto;
+  margin-top: 20px;
+  margin-bottom: 40px;
+}
+
+.eid-card{
+  background:linear-gradient(145deg, #0d2b5a 0%, #071327 100%);
+  padding:50px 40px;
+  border-radius:30px;
+  border:3px solid var(--gold);
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  box-shadow:
+    0 0 100px rgba(212,175,55,0.4),
+    0 0 200px rgba(212,175,55,0.2),
+    inset 0 0 50px rgba(212,175,55,0.05);
+  animation:cardPop 0.8s ease;
+}
+
+@keyframes cardPop{
+  0%{transform:scale(0.5);opacity:0;}
+  50%{transform:scale(1.05);}
+  100%{transform:scale(1);opacity:1;}
+}
+
+/* Sparkles around card */
+.eid-card::before{
+  content:'';
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  bottom:0;
+  border-radius:30px;
+  pointer-events:none;
+}
+
+/* Eid Card Lanterns - Matching Main Page Style */
+.eid-lanterns-row {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  margin-bottom: 15px;
+  padding-top: 10px;
+}
+
+.eid-lantern-small {
+  width: 35px;
+  height: 55px;
+  animation: eidLanternSway 4s ease-in-out infinite;
+}
+
+.eid-lantern-small:first-child {
+  animation-delay: 0s;
+}
+
+.eid-lantern-small:last-child {
+  animation-delay: 1s;
+}
+
+@keyframes eidLanternSway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+
+
+.eid-crescent{
+  font-size:80px;
+  margin-bottom:15px;
+  animation:moonRock 3s infinite ease-in-out;
+  display: inline-block;
+  filter: drop-shadow(0 0 20px rgba(255,236,179,0.6));
+}
+
+@keyframes moonRock{
+  0%,100%{transform:rotate(-10deg);}
+  50%{transform:rotate(10deg);}
+}
+
+.eid-card h1{
+  font-family:'Amiri',serif;
+  font-size:clamp(36px,8vw,52px);
+  color:var(--gold);
+  margin:15px 0 10px;
+  text-shadow:0 0 40px var(--gold-glow);
+  animation: shimmerText 3s ease-in-out infinite;
+}
+
+@keyframes shimmerText {
+  0%, 100% { text-shadow: 0 0 40px var(--gold-glow); }
+  50% { text-shadow: 0 0 60px var(--gold-glow), 0 0 80px rgba(212,175,55,0.6); }
+}
+
+.eid-card .eid-arabic{
+  font-family:'Amiri',serif;
+  font-size:clamp(28px,6vw,40px);
+  color:var(--gold-soft);
+  margin-bottom:20px;
+  animation: fadeInUp 1s ease 0.3s both;
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.eid-card .eid-message-text{
+  font-size:16px;
+  color:rgba(255,255,255,0.85);
+  max-width:400px;
+  margin:0 auto 20px;
+  line-height:1.8;
+  animation: fadeInUp 1s ease 0.5s both;
+}
+
+.eid-card .eid-wishes{
+  font-style:italic;
+  color:var(--gold-soft);
+  font-size:14px;
+  margin-bottom:20px;
+  animation: fadeInUp 1s ease 0.7s both;
+}
+
+/* Name Personalization */
+.eid-name-section {
+  margin: 20px 0 15px;
+  animation: fadeInUp 1s ease 0.9s both;
+}
+
+.eid-name-input {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(212,175,55,0.3);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  width: 200px;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.eid-name-input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+.eid-name-input:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 15px rgba(212,175,55,0.3);
+}
+
+body.light-mode .eid-name-input {
+  background: rgba(0,0,0,0.05);
+  color: var(--light-text-primary);
+  border-color: rgba(45,80,45,0.3);
+}
+
+body.light-mode .eid-name-input::placeholder {
+  color: rgba(0,0,0,0.4);
+}
+
+body.light-mode .eid-name-input:focus {
+  border-color: var(--light-gold);
+}
+
+.eid-name-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 8px;
+}
+
+body.light-mode .eid-name-label {
+  color: rgba(0,0,0,0.5);
+}
+
+/* Display name on card */
+.eid-from-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  color: var(--gold-soft);
+  margin-top: 15px;
+  animation: fadeInUp 1s ease 1.1s both;
+  min-height: 24px;
+}
+
+body.light-mode .eid-from-name {
+  color: var(--light-gold);
+}
+
+.eid-card-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  animation: fadeInUp 1s ease 1.3s both;
+}
+
+.eid-share-btn{
+  background:linear-gradient(135deg, var(--gold) 0%, #b8963a 100%);
+  color:#071327;
+  padding:14px 28px;
+  font-size:15px;
+  border-radius:30px;
+}
+
+.eid-share-btn:hover{
+  transform:scale(1.05);
+  box-shadow:0 0 30px var(--gold-glow);
+}
+
+.eid-close-btn{
+  background:rgba(255,255,255,0.1);
+  color:white;
+  padding:14px 28px;
+  font-size:15px;
+  border-radius:30px;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+.eid-close-btn:hover{
+  background:rgba(255,255,255,0.2);
+}
+
+body.light-mode .eid-close-btn {
+  background: rgba(0,0,0,0.05);
+  color: #1a2e1a;
+  border-color: rgba(0,0,0,0.1);
+}
+
+body.light-mode .eid-close-btn:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+/* Light mode Eid card */
+body.light-mode .eid-card{
+  background:linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%);
+  color:var(--light-text-primary);
+}
+
+body.light-mode .eid-card h1{
+  color:var(--light-heading) !important;
+}
+
+body.light-mode .eid-card .eid-arabic{
+  color:var(--light-gold) !important;
+}
+
+body.light-mode .eid-card .eid-message-text,
+body.light-mode .eid-card .eid-wishes{
+  color:rgba(26,46,26,0.85) !important;
+}
+
+body.light-mode .eid-crescent {
+  filter: drop-shadow(0 0 15px rgba(139,105,20,0.4));
+}
+
+
+
+/* ===== EID CARD CAPTURE VERSION ===== */
+.eid-card-capture {
+  /* Static styling for optimal canvas capture */
+  animation: none !important;
+}
+
+.eid-card-capture .eid-crescent {
+  animation: none !important;
+}
+
+.eid-card-capture .eid-lanterns-row {
+  animation: none !important;
+}
+
+.eid-card-capture .eid-lantern-small {
+  animation: none !important;
+}
+
+.eid-card-capture h1 {
+  animation: none !important;
+  text-shadow: 0 0 40px var(--gold-glow);
+}
+
+.eid-card-capture .eid-arabic,
+.eid-card-capture .eid-message-text,
+.eid-card-capture .eid-wishes,
+.eid-card-capture .eid-from-name {
+  animation: none !important;
+}
+
+/* Light mode capture styles */
+.eid-card-capture.light-mode-capture {
+  background: linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%) !important;
+  color: #1a2e1a;
+}
+
+.eid-card-capture.light-mode-capture h1 {
+  color: #0d4d0d !important;
+  text-shadow: 0 2px 8px rgba(13,77,13,0.3) !important;
+}
+
+.eid-card-capture.light-mode-capture .eid-arabic {
+  color: #8B6914 !important;
+}
+
+.eid-card-capture.light-mode-capture .eid-message-text,
+.eid-card-capture.light-mode-capture .eid-wishes {
+  color: rgba(26,46,26,0.85) !important;
+}
+
+.eid-card-capture.light-mode-capture .eid-crescent {
+  filter: drop-shadow(0 0 15px rgba(139,105,20,0.4));
+}
+
+.eid-card-capture.light-mode-capture .eid-from-name {
+  color: #8B6914 !important;
+}
+
+.eid-card-capture.light-mode-capture .eid-lantern-small {
+  filter: drop-shadow(0 0 10px rgba(255,183,77,0.4));
+}
+
+/* ===== DUA CARD CAPTURE VERSION ===== */
+.dua-card-capture {
+  animation: none !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+.dua-card-capture * {
+  animation: none !important;
+}
+
+.dua-card-capture.light-mode-capture {
+  background: linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%) !important;
+  color: #1a2e1a !important;
+}
+
+.dua-card-capture.light-mode-capture .modal-day-badge {
+  background: linear-gradient(135deg, #2d5a2d 0%, #1a4d1a 100%);
+  color: #fff;
+}
+
+.dua-card-capture.light-mode-capture .modal-spiritual-title {
+  color: #0d4d0d !important;
+}
+
+.dua-card-capture.light-mode-capture .arabic {
+  background: rgba(139,105,20,0.1);
+  border-color: rgba(139,105,20,0.3);
+  color: #8B6914 !important;
+}
+
+.dua-card-capture.light-mode-capture .translit {
+  color: rgba(26,46,26,0.7) !important;
+}
+
+.dua-card-capture.light-mode-capture .translation {
+  color: rgba(26,46,26,0.9) !important;
+}
+
+.dua-card-capture.light-mode-capture .reflection {
+  background: rgba(45,80,45,0.1);
+  border-color: #8B6914;
+  color: rgba(26,46,26,0.85) !important;
+}
+
+/* ========== RESET CONFIRMATION MODAL ========== */
+#resetConfirmModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 6000;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+body.light-mode #resetConfirmModal {
+  background: rgba(245,241,230,0.95);
+}
+
+#resetConfirmModal.show {
+  display: flex;
+  animation: fadeIn 0.3s ease;
+}
+
+.reset-confirm-content {
+  background: var(--modal-bg);
+  padding: 35px 30px;
+  max-width: 380px;
+  width: 100%;
+  border-radius: 24px;
+  border: 2px solid #d8d1d1;
+  text-align: center;
+  color: var(--text-primary);
+  box-shadow: 0 0 60px rgba(229, 229, 146, 0.3);
+  animation: modalSlide 0.3s ease;
+}
+
+body.light-mode .reset-confirm-content {
+  background: linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%);
+  color: #1a2e1a;
+}
+
+.reset-confirm-icon {
+  font-size: 50px;
+  margin-bottom: 15px;
+}
+
+.reset-confirm-content h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  color: #f0ebeb;
+  margin-bottom: 12px;
+}
+
+.reset-confirm-content p {
+  font-size: 15px;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+body.light-mode .reset-confirm-content p {
+  color: rgba(26,46,26,0.8);
+}
+
+.reset-confirm-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.reset-cancel-btn {
+  background: rgba(255,255,255,0.1);
+  color: var(--text-primary);
+  padding: 12px 28px;
+  font-size: 15px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+body.light-mode .reset-cancel-btn {
+  background: rgba(0,0,0,0.05);
+  color: #1a2e1a;
+  border-color: rgba(0,0,0,0.1);
+}
+
+.reset-cancel-btn:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+body.light-mode .reset-cancel-btn:hover {
+  background: rgba(0,0,0,0.1);
+}
+
+.reset-ok-btn {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+  color: white;
+  padding: 12px 28px;
+  font-size: 15px;
+  border-radius: 30px;
+  border: none;
+}
+
+.reset-ok-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+}
+
+/* ========== OLD EID SCREEN (kept for compatibility) ========== */
+#eidScreen{
+  position:fixed;
+  inset:0;
+  background:linear-gradient(145deg, #0a1628 0%, #071327 100%);
+  display:none;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  z-index:4000;
+  padding:20px;
+}
+
+#eidScreen.show{
+  display:flex;
+  animation:fadeIn 0.8s ease;
+}
+
+#eidScreen h2{
+  font-family:'Amiri',serif;
+  color:var(--gold);
+  font-size:clamp(36px,8vw,60px);
+  text-shadow:0 0 50px var(--gold-glow);
+  margin-bottom:15px;
+}
+
+#eidScreen p{
+  font-size:clamp(14px,3vw,20px);
+  color:var(--gold-soft);
+  max-width:500px;
+  line-height:1.6;
+}
+
+.eid-decorations{
+  font-size:50px;
+  margin-bottom:25px;
+  animation:float 2s infinite ease-in-out;
+}
+
+/* ========== RESPONSIVE FIXES ========== */
+@media(max-width:600px){
+  .current-day-badge{
+    top:auto;
+    bottom:15px;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:12px;
+    padding:8px 16px;
+  }
+  
+  .controls{
+    top:auto;
+    bottom:60px;
+    right:50%;
+    transform:translateX(50%);
+    flex-direction:row;
+  }
+  
+  header{padding:20px 15px 15px;}
+  header h1{font-size:40px;}
+  .modal-content{padding:25px 20px;}
+  .welcome-content{padding:30px 20px;}
+  .modal-buttons{flex-direction:column;}
+  button{width:100%;justify-content:center;}
+  .eid-card{padding:30px 20px;}
+  .eid-lanterns-row { gap: 60px; }
+  .eid-lantern-small { width: 28px; height: 45px; }
+  .eid-name-input { width: 160px; }
+  .final-share-section { margin: 40px auto 30px; }
+  .share-calendar-btn { padding: 12px 24px; font-size: 14px; }
+  
+  /* Eid card mobile scrolling fix */
+  #eidCelebration {
+    padding: 15px;
+    padding-top: 20px;
+    padding-bottom: 30px;
+    align-items: flex-start;
+  }
+  .eid-card-container {
+    margin-top: 10px;
+    margin-bottom: 30px;
+  }
+  .eid-card-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+  .eid-share-btn, .eid-close-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ========== CUSTOM SCROLLBAR ========== */
+::-webkit-scrollbar{
+  width:8px;
+}
+
+::-webkit-scrollbar-track{
+  background:rgba(0,0,0,0.2);
+}
+
+::-webkit-scrollbar-thumb{
+  background:var(--gold);
+  border-radius:10px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background:var(--gold-soft);
+}
+</style>
+</head>
+<body>
+
+<!-- Background Decorations -->
+<div class="bg-decorations">
+  <!-- Stars -->
+  <div class="stars-container" id="starsContainer"></div>
+  
+  <!-- Crescent Moon -->
+  <div class="crescent-moon"></div>
+  
+  <!-- Elegant Lanterns -->
+  <div class="lantern-wrapper lantern-1">
+    <svg class="lantern lantern-glow" width="50" height="80" viewBox="0 0 50 80">
+      <defs>
+        <linearGradient id="lanternGold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFD700"/>
+          <stop offset="100%" style="stop-color:#B8860B"/>
+        </linearGradient>
+        <linearGradient id="lanternGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#FFF8E1"/>
+          <stop offset="100%" style="stop-color:#FFECB3"/>
+        </linearGradient>
+      </defs>
+      <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+      <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+      <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.9"/>
+      <path d="M15 25 Q25 22 35 25" stroke="url(#lanternGold)" stroke-width="1.5" fill="none"/>
+      <path d="M14 35 Q25 32 36 35" stroke="url(#lanternGold)" stroke-width="1.5" fill="none"/>
+      <path d="M13 45 Q25 42 37 45" stroke="url(#lanternGold)" stroke-width="1.5" fill="none"/>
+      <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+      <line x1="25" y1="65" x2="25" y2="78" stroke="#B8860B" stroke-width="1"/>
+      <circle cx="25" cy="78" r="2" fill="#FFD700"/>
+    </svg>
+  </div>
+  
+  <div class="lantern-wrapper lantern-2">
+    <svg class="lantern lantern-glow" width="50" height="80" viewBox="0 0 50 80">
+      <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.9"/>
+      <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+      <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+      <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+    </svg>
+  </div>
+  
+  <div class="lantern-wrapper lantern-3">
+    <svg class="lantern lantern-glow" width="45" height="70" viewBox="0 0 50 80">
+      <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.85"/>
+      <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+      <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+      <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+    </svg>
+  </div>
+  
+  <div class="lantern-wrapper lantern-4">
+    <svg class="lantern lantern-glow" width="45" height="70" viewBox="0 0 50 80">
+      <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.85"/>
+      <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+      <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+      <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+    </svg>
+  </div>
+  
+  <div class="lantern-wrapper lantern-5">
+    <svg class="lantern lantern-glow" width="40" height="65" viewBox="0 0 50 80">
+      <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.8"/>
+      <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+      <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+      <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+    </svg>
+  </div>
+  
+  <div class="lantern-wrapper lantern-6">
+    <svg class="lantern lantern-glow" width="40" height="65" viewBox="0 0 50 80">
+      <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.8"/>
+      <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+      <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+      <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+    </svg>
+  </div>
+  
+  <!-- Mosque Background -->
+  <div class="mosque-bg">
+    <svg width="100%" height="100%" viewBox="0 0 1200 120" preserveAspectRatio="xMidYMax meet">
+      <path d="M0,120 L0,80 L100,80 L100,50 Q150,0 200,50 L200,80 L300,80 L300,60 Q350,20 400,60 L400,80 L500,80 L500,40 Q550,-20 600,40 L600,80 L700,80 L700,40 Q750,-20 800,40 L800,80 L900,80 L900,60 Q950,20 1000,60 L1000,80 L1100,80 L1100,50 Q1150,0 1200,50 L1200,120 Z" fill="rgba(212,175,55,0.1)"/>
+    </svg>
+  </div>
+</div>
+
+<!-- Decorative Hanging Lights at Top Edge -->
+<div class="top-lights-container" id="topLightsContainer">
+  <div class="lights-wire"></div>
+</div>
+
+<!-- Control Buttons -->
+<div class="controls">
+  <button class="theme-toggle" onclick="toggleTheme()">
+    <span>☀️</span>
+    <span>Day Mode</span>
+  </button>
+  <button class="reset-btn" onclick="resetProgress()">
+    <span>🔄</span>
+    <span>Reset</span>
+  </button>
+</div>
+
+<!-- Day Badge -->
+<div class="current-day-badge" id="currentDayBadge">🌙 Ramadan Calendar</div>
+
+<!-- Main Content -->
+<div class="main-content">
+  <header>
+    <h1>رمضان كريم</h1>
+    <div class="arabic-text">Ramadan Kareem</div>
+    <p>M U B A R A K</p>
+  </header>
+
+  <div class="progress-section">
+    <div class="progress-text" id="progressText">0 of 30 doors opened</div>
+    <div class="progress-container">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+  </div>
+
+  <div class="calendar" id="calendar"></div>
+  
+  <!-- Final Share Calendar Section (At the very end) -->
+  <div class="final-share-section">
+    <div class="share-label">Share your blessed journey with loved ones</div>
+    <button class="share-calendar-btn" onclick="shareCalendar()">
+      <span>📤</span>
+      <span>Share Calendar</span>
+    </button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="modal"></div>
+
+<!-- Hidden Dua Card for Canvas Capture (Full Height, No Cropping) -->
+<div id="duaCardCaptureContainer" style="position: fixed; left: -9999px; top: 0; width: 480px; z-index: -1;">
+  <div class="modal-content dua-card-capture" id="duaCardCapture" style="max-height: none; overflow: visible;">
+    <!-- Content populated dynamically before capture -->
+  </div>
+</div>
+
+<!-- Reset Confirmation Modal -->
+<div id="resetConfirmModal">
+  <div class="reset-confirm-content">
+    <h3>Reset Progress?</h3>
+    <div class="reset-confirm-buttons">
+      <button class="reset-cancel-btn" onclick="closeResetConfirm()">
+        Cancel
+      </button>
+      <button class="reset-ok-btn" onclick="confirmReset()">
+        Reset
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Welcome Modal -->
+<div id="welcomeModal">
+  <div class="welcome-content">
+    <div class="welcome-icon">🌙</div>
+    <h2>رمضان مبارك</h2>
+    <div class="subtitle">Ramadan Mubarak</div>
+    <p>Welcome to your blessed Ramadan journey!</p>
+    <p>Open a door each day to discover beautiful duas and reflections.</p>
+    <button class="start-btn" onclick="closeWelcome()">Start Journey ✨</button>
+  </div>
+</div>
+
+<!-- Enhanced Eid Mubarak Celebration Card -->
+<div id="eidCelebration">
+  <div class="eid-card-container">
+    <div class="eid-card" id="eidCard">
+      <!-- Two Elegant Lanterns at Top (Matching Main Page Style) -->
+      <div class="eid-lanterns-row">
+        <svg class="eid-lantern-small lantern-glow" viewBox="0 0 50 80">
+          <defs>
+            <linearGradient id="eidLanternGold" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#FFD700"/>
+              <stop offset="100%" style="stop-color:#B8860B"/>
+            </linearGradient>
+            <linearGradient id="eidLanternGlow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#FFF8E1"/>
+              <stop offset="100%" style="stop-color:#FFECB3"/>
+            </linearGradient>
+          </defs>
+          <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+          <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#eidLanternGold)"/>
+          <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#eidLanternGlow)" opacity="0.9"/>
+          <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#eidLanternGold)"/>
+          <line x1="25" y1="65" x2="25" y2="78" stroke="#B8860B" stroke-width="1"/>
+          <circle cx="25" cy="78" r="2" fill="#FFD700"/>
+        </svg>
+        <svg class="eid-lantern-small lantern-glow" viewBox="0 0 50 80">
+          <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+          <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#eidLanternGold)"/>
+          <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#eidLanternGlow)" opacity="0.9"/>
+          <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#eidLanternGold)"/>
+          <line x1="25" y1="65" x2="25" y2="78" stroke="#B8860B" stroke-width="1"/>
+          <circle cx="25" cy="78" r="2" fill="#FFD700"/>
+        </svg>
+      </div>
+      
+      <div class="eid-crescent">🌙</div>
+      <h1>Eid Mubarak!</h1>
+      <div class="eid-arabic">عيد الفطر مبارك</div>
+      <div class="eid-message-text">
+        May Allah accept all your prayers, fasts, and good deeds during this blessed month.
+      </div>
+      <div class="eid-wishes">Wishing you peace, happiness, and countless blessings</div>
+      
+      <!-- Name Personalization Section -->
+      <div class="eid-name-section">
+        <label class="eid-name-label">Add your name (optional)</label>
+        <input type="text" class="eid-name-input" id="eidNameInput" placeholder="Your name" maxlength="30" oninput="updateEidName()">
+      </div>
+      
+      <!-- Display name on card -->
+      <div class="eid-from-name" id="eidFromName"></div>
+      
+      <div class="eid-card-buttons">
+        <button class="eid-share-btn" onclick="shareEidAsImage()">
+          📴 Share Card
+        </button>
+        <button class="eid-close-btn" onclick="closeEidCelebration()">
+          Continue
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden Eid Card for Canvas Capture (optimized for image generation) -->
+<div id="eidCardCaptureContainer" style="position: fixed; left: -9999px; top: 0; width: 520px; z-index: -1;">
+  <div class="eid-card eid-card-capture" id="eidCardCapture">
+    <!-- Two Elegant Lanterns at Top (Matching Main Page Style) -->
+    <div class="eid-lanterns-row">
+      <svg class="eid-lantern-small lantern-glow" viewBox="0 0 50 80">
+        <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+        <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+        <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.9"/>
+        <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+        <line x1="25" y1="65" x2="25" y2="78" stroke="#B8860B" stroke-width="1"/>
+        <circle cx="25" cy="78" r="2" fill="#FFD700"/>
+      </svg>
+      <svg class="eid-lantern-small lantern-glow" viewBox="0 0 50 80">
+        <line x1="25" y1="0" x2="25" y2="15" stroke="#8B7355" stroke-width="1"/>
+        <ellipse cx="25" cy="18" rx="12" ry="4" fill="url(#lanternGold)"/>
+        <path d="M13 18 Q8 40 13 60 Q25 70 37 60 Q42 40 37 18 Z" fill="url(#lanternGlow)" opacity="0.9"/>
+        <ellipse cx="25" cy="62" rx="10" ry="3" fill="url(#lanternGold)"/>
+        <line x1="25" y1="65" x2="25" y2="78" stroke="#B8860B" stroke-width="1"/>
+        <circle cx="25" cy="78" r="2" fill="#FFD700"/>
+      </svg>
+    </div>
+    
+    <div class="eid-crescent">🌙</div>
+    <h1>Eid Mubarak!</h1>
+    <div class="eid-arabic">عيد الفطر مبارك</div>
+    <div class="eid-message-text">
+      May Allah accept all your prayers, fasts, and good deeds during this blessed month.
+    </div>
+    <div class="eid-wishes">Wishing you peace, happiness, and countless blessings</div>
+    
+    <!-- Display name on card (populated before capture) -->
+    <div class="eid-from-name" id="eidFromNameCapture"></div>
+  </div>
+</div>
+
+<script>
+// ===== DUAS DATA WITH SPIRITUAL THEMES =====
+const duas = [
+  {day:1,emoji:"🕌🌙",title:"Blessed Beginning",dua_arabic:"اللَّهُمَّ اجْعَلْ صِيَامِي فِيهِ صِيَامَ الصَّائِمِينَ",dua_transliteration:"Allahumma aj'al siyami fihi siyam as-sa'imin",dua_translation:"O Allah, make my fast in this month the fast of true believers.",message:"Welcome to the blessed month of Ramadan! Let this be a journey of spiritual renewal and closeness to Allah."},
+  {day:2,emoji:"🤲💪",title:"Strength in Faith",dua_arabic:"اللَّهُمَّ قَرِّبْنِي فِيهِ إِلَى مَرْضَاتِكَ",dua_transliteration:"Allahumma qarribni fihi ila mardatik",dua_translation:"O Allah, bring me closer to Your pleasure in this month.",message:"Seek closeness to Allah through sincere worship and good deeds today."},
+  {day:3,emoji:"🌿🧘",title:"Seeking Forgiveness",dua_arabic:"اللَّهُمَّ ارْزُقْنِي فِيهِ الذِّهْنَ وَالْفِطْنَةَ",dua_transliteration:"Allahumma arzuqni fihi adh-dhihn wal-fitnah",dua_translation:"O Allah, grant me awareness and understanding in this month.",message:"Stay mindful and present in your worship. Let each moment be filled with purpose."},
+  {day:4,emoji:"🛡️✨",title:"Divine Protection",dua_arabic:"اللَّهُمَّ لَا تَخْذُلْنِي فِيهِ",dua_transliteration:"Allahumma la takhzhulni fihi",dua_translation:"O Allah, do not abandon me in this month.",message:"Trust in Allah's mercy and guidance. He is always with those who seek Him."},
+  {day:5,emoji:"💖🤲",title:"Gratitude & Patience",dua_arabic:"اللَّهُمَّ أَعِنِّي فِيهِ عَلَى صِيَامِهِ وَقِيَامِهِ",dua_transliteration:"Allahumma a'inni fihi ala siyamihi wa qiyamihi",dua_translation:"O Allah, help me to fast and pray during this month.",message:"Seek Allah's assistance in your worship. Every effort is rewarded."},
+  {day:6,emoji:"💎✨",title:"Purification of Soul",dua_arabic:"اللَّهُمَّ طَهِّرْنِي فِيهِ مِنَ الذُّنُوبِ",dua_transliteration:"Allahumma tahhirni fihi min adh-dhunub",dua_translation:"O Allah, purify me from sins in this month.",message:"Use this blessed time for sincere repentance and spiritual cleansing."},
+  {day:7,emoji:"💝🤲",title:"Mercy & Kindness",dua_arabic:"اللَّهُمَّ ارْزُقْنِي فِيهِ رَحْمَةَ الْأَيْتَامِ",dua_transliteration:"Allahumma arzuqni fihi rahmatal aytam",dua_translation:"O Allah, grant me the mercy towards orphans in this month.",message:"Show compassion to those in need. Charity multiplies in Ramadan."},
+  {day:8,emoji:"🌈✨",title:"Embracing Goodness",dua_arabic:"اللَّهُمَّ اجْعَلْ لِي فِيهِ نَصِيبًا مِنْ كُلِّ خَيْرٍ",dua_transliteration:"Allahumma aj'al li fihi nasiban min kulli khayr",dua_translation:"O Allah, grant me a share of every good in this month.",message:"Embrace all forms of goodness - prayer, charity, kindness, and patience."},
+  {day:9,emoji:"🙏💫",title:"Forgiveness Granted",dua_arabic:"اللَّهُمَّ اغْفِرْ لِي ذَنْبِي وَوَسِّعْ لِي فِي رِزْقِي",dua_transliteration:"Allahummaghfir li dhanbi wa wassi' li fi rizqi",dua_translation:"O Allah, forgive my sins and expand my provision.",message:"Seek forgiveness and trust in Allah's abundant provision."},
+  {day:10,emoji:"🕌🌸",title:"Gardens of Paradise",dua_arabic:"اللَّهُمَّ إِنِّي أَسْأَلُكَ الْجَنَّةَ",dua_transliteration:"Allahumma inni as'aluka al-jannah",dua_translation:"O Allah, I ask You for Paradise.",message:"Keep your eyes on the ultimate goal - eternal happiness in Jannah."},
+  {day:11,emoji:"🔥🛡️",title:"Seeking Protection",dua_arabic:"اللَّهُمَّ أَعُوذُ بِكَ مِنَ النَّارِ",dua_transliteration:"Allahumma a'udhu bika minan nar",dua_translation:"O Allah, I seek refuge in You from the Fire.",message:"Seek protection through good deeds and sincere repentance."},
+  {day:12,emoji:"👨‍👩‍👧💕",title:"Family Bonds",dua_arabic:"اللَّهُمَّ ارْزُقْنِي فِيهِ لُطْفًا بِالْوَالِدَيْنِ",dua_transliteration:"Allahumma arzuqni fihi lutfan bil-walidayn",dua_translation:"O Allah, grant me kindness towards my parents in this month.",message:"Honor your parents with extra care and love during this blessed month."},
+  {day:13,emoji:"🤲🌟",title:"Complete Trust",dua_arabic:"اللَّهُمَّ اجْعَلْنِي فِيهِ مِنَ الْمُتَوَكِّلِينَ",dua_transliteration:"Allahumma aj'alni fihi minal mutawakkilin",dua_translation:"O Allah, make me among those who trust in You.",message:"Practice tawakkul - complete trust in Allah's plan for you."},
+  {day:14,emoji:"✨🎁",title:"Divine Blessings",dua_arabic:"اللَّهُمَّ لَا تَحْرِمْنِي خَيْرَ مَا عِنْدَكَ",dua_transliteration:"Allahumma la tahrimni khayra ma 'indak",dua_translation:"O Allah, do not deprive me of the good that is with You.",message:"Open your heart to receive Allah's infinite blessings."},
+  {day:15,emoji:"🎯💫",title:"Mid-Ramadan Renewal",dua_arabic:"اللَّهُمَّ وَفِّقْنِي فِيهِ لِلطَّاعَةِ",dua_transliteration:"Allahumma waffiqni fihi litta'ah",dua_translation:"O Allah, grant me success in obeying You in this month.",message:"Halfway through Ramadan! Renew your commitment to obedience."},
+  {day:16,emoji:"❤️🩹",title:"Pure Heart",dua_arabic:"اللَّهُمَّ ارْزُقْنِي فِيهِ قَلْبًا سَلِيمًا",dua_transliteration:"Allahumma arzuqni fihi qalban saliman",dua_translation:"O Allah, grant me a sound heart in this month.",message:"Purify your heart from grudges, envy, and negativity."},
+  {day:17,emoji:"📜✨",title:"Blessed Record",dua_arabic:"اللَّهُمَّ اجْعَلْ صَحِيفَتِي فِيهِ مُبَارَكَةً",dua_transliteration:"Allahumma aj'al sahifati fihi mubarakah",dua_translation:"O Allah, make my record of deeds blessed in this month.",message:"Fill your day with abundant good deeds and sincere worship."},
+  {day:18,emoji:"🤝🌙",title:"Divine Companionship",dua_arabic:"اللَّهُمَّ أَنِسْ وَحْشَتِي فِيهِ",dua_transliteration:"Allahumma anis wahshati fihi",dua_translation:"O Allah, be the companion of my loneliness in this month.",message:"Find comfort in Allah's presence during moments of solitude."},
+  {day:19,emoji:"🕊️💫",title:"Freedom",dua_arabic:"اللَّهُمَّ أَعْتِقْ رَقَبَتِي مِنَ النَّارِ",dua_transliteration:"Allahumma a'tiq raqabati minan nar",dua_translation:"O Allah, free my neck from the Fire.",message:"Seek freedom from sin through sincere repentance and good deeds."},
+  {day:20,emoji:"🕌🤲",title:"Devoted Worship",dua_arabic:"اللَّهُمَّ اجْعَلْنِي فِيهِ مِنَ الْعَابِدِينَ",dua_transliteration:"Allahumma aj'alni fihi minal 'abidin",dua_translation:"O Allah, make me among the worshippers in this month.",message:"Enter the last ten days with renewed devotion and intensity."},
+  {day:21,emoji:"🌙⭐",title:"Night of Power",dua_arabic:"اللَّهُمَّ ارْزُقْنِي لَيْلَةَ الْقَدْرِ",dua_transliteration:"Allahumma arzuqni laylat al-qadr",dua_translation:"O Allah, grant me Laylatul Qadr (Night of Power).",message:"Seek the Night of Power in these last ten nights with extra prayers."},
+  {day:22,emoji:"🌅✨",title:"Good Ending",dua_arabic:"اللَّهُمَّ أَحْسِنْ عَاقِبَتِي فِي الْأُمُورِ",dua_transliteration:"Allahumma ahsin 'aqibati fil-umur",dua_translation:"O Allah, grant me a good ending in all matters.",message:"Focus on ending Ramadan strong with consistent worship."},
+  {day:23,emoji:"🙏💫",title:"Accepted Deeds",dua_arabic:"اللَّهُمَّ تَقَبَّلْ مِنِّي صَالِحَ الْأَعْمَالِ",dua_transliteration:"Allahumma taqabbal minni salih al-a'mal",dua_translation:"O Allah, accept from me my righteous deeds.",message:"Pray for acceptance of all your Ramadan efforts."},
+  {day:24,emoji:"🤲💚",title:"Seeking Forgiveness",dua_arabic:"اللَّهُمَّ اجْعَلْنِي فِيهِ مِنَ الْمُسْتَغْفِرِينَ",dua_transliteration:"Allahumma aj'alni fihi minal mustaghfirin",dua_translation:"O Allah, make me among those who seek forgiveness.",message:"Increase your istighfar - seeking forgiveness brings peace."},
+  {day:25,emoji:"💝🌙",title:"Divine Mercy",dua_arabic:"اللَّهُمَّ ارْحَمْنِي بِرَحْمَتِكَ",dua_transliteration:"Allahumma arhamni birahmatik",dua_translation:"O Allah, have mercy on me with Your mercy.",message:"Remember Allah's infinite mercy and extend mercy to others."},
+  {day:26,emoji:"🛡️✨",title:"Divine Protection",dua_arabic:"اللَّهُمَّ احْفَظْنِي فِيهِ مِنْ كُلِّ سُوءٍ",dua_transliteration:"Allahumma ahfazni fihi min kulli su'",dua_translation:"O Allah, protect me from all evil in this month.",message:"Seek Allah's protection from harm and evil inclinations."},
+  {day:27,emoji:"💎❤️",title:"Pure Heart",dua_arabic:"اللَّهُمَّ اجْعَلْ قَلْبِي نَقِيًّا",dua_transliteration:"Allahumma aj'al qalbi naqiyyan",dua_translation:"O Allah, make my heart pure.",message:"A pure heart is the foundation of all good deeds."},
+  {day:28,emoji:"🤝💫",title:"Never Alone",dua_arabic:"اللَّهُمَّ لَا تَتْرُكْنِي فِيهِ وَحْدِي",dua_transliteration:"Allahumma la tatrakni fihi wahdi",dua_translation:"O Allah, do not leave me alone in this month.",message:"Feel Allah's presence in every moment of your day."},
+  {day:29,emoji:"🌟✨",title:"Divine Pleasure",dua_arabic:"اللَّهُمَّ أَوْجِبْ لِي فِيهِ رِضْوَانَكَ",dua_transliteration:"Allahumma awjib li fihi ridwanak",dua_translation:"O Allah, make Your pleasure obligatory for me in this month.",message:"Strive for Allah's pleasure above all else."},
+  {day:30,emoji:"🌙✨",title:"Eid Mubarak",dua_arabic:"اللَّهُمَّ تَقَبَّلْ صِيَامِي وَقِيَامِي",dua_transliteration:"Allahumma taqabbal siyami wa qiyami",dua_translation:"O Allah, accept my fasting and my prayers.",message:"Congratulations on completing Ramadan! May Allah accept all your efforts."}
+];
+
+// ===== STATE MANAGEMENT =====
+let openedDoors = JSON.parse(localStorage.getItem('ramadanOpenedDoors') || '[]');
+let hasSeenWelcome = localStorage.getItem('ramadanWelcome') === 'true';
+let isLightMode = localStorage.getItem('ramadanTheme') === 'light';
+let eidShown = localStorage.getItem('ramadanEidShown') === 'true';
+
+// ===== DOM ELEMENTS =====
+const calendar = document.getElementById("calendar");
+const modal = document.getElementById("modal");
+const welcomeModal = document.getElementById("welcomeModal");
+const eidCelebration = document.getElementById("eidCelebration");
+const progressFill = document.getElementById("progressFill");
+const progressText = document.getElementById("progressText");
+
+// ===== SPIRITUAL SOUND USING WEB AUDIO API =====
+let audioContext = null;
+
+function playSpiritualChime() {
+  try {
+    if (!audioContext) {
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    const ctx = audioContext;
+    const now = ctx.currentTime;
+    
+    // Create a gentle, spiritual chime with multiple harmonics
+    // C5, E5, G5, C6 - a gentle major chord
+    const frequencies = [523.25, 659.25, 783.99, 1046.50];
+    
+    frequencies.forEach((freq, i) => {
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(ctx.destination);
+      
+      oscillator.frequency.value = freq;
+      oscillator.type = 'sine';
+      
+      // Gentle attack and long decay for a spiritual feel
+      gainNode.gain.setValueAtTime(0, now);
+      gainNode.gain.linearRampToValueAtTime(0.15 / (i + 1), now + 0.05);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 1.5);
+      
+      oscillator.start(now + i * 0.08);
+      oscillator.stop(now + 1.5);
+    });
+  } catch (e) {
+    // Fallback: silent fail if Web Audio API is not available
+    console.log('Audio playback not available');
+  }
+}
+
+// ===== GENERATE STARS =====
+function generateStars(){
+  const container = document.getElementById('starsContainer');
+  for(let i = 0; i < 50; i++){
+    const star = document.createElement('div');
+    star.className = 'star';
+    star.style.left = Math.random() * 100 + '%';
+    star.style.top = Math.random() * 70 + '%';
+    star.style.width = (Math.random() * 2 + 1) + 'px';
+    star.style.height = star.style.width;
+    star.style.animationDelay = Math.random() * 3 + 's';
+    container.appendChild(star);
+  }
+}
+
+// ===== GENERATE DECORATIVE TOP LIGHTS =====
+function generateTopLights() {
+  const container = document.getElementById('topLightsContainer');
+  const colors = ['golden', 'warm', 'amber'];
+  const numLights = 15;
+  
+  for (let i = 0; i < numLights; i++) {
+    const light = document.createElement('div');
+    light.className = 'hanging-light';
+    light.style.left = `${5 + (i * 90 / numLights)}%`;
+    light.style.animationDelay = `${Math.random() * 2}s`;
+    
+    light.innerHTML = `
+      <div class="light-string-line"></div>
+      <div class="light-bulb-decor ${colors[i % 3]}"></div>
+    `;
+    
+    container.appendChild(light);
+  }
+}
+
+// ===== INITIALIZATION =====
+function init(){
+  generateStars();
+  generateTopLights();
+  
+  // Apply saved theme
+  if(isLightMode){
+    document.body.classList.add('light-mode');
+    updateThemeButton();
+  }
+  
+  // Show welcome on first visit
+  if(!hasSeenWelcome){
+    welcomeModal.classList.add('show');
+  }
+  
+  renderCalendar();
+  updateProgress();
+  
+  // Check if all doors opened - show Eid celebration
+  if(openedDoors.length === 30 && !eidShown){
+    setTimeout(() => {
+      eidCelebration.classList.add('show');
+    }, 1000);
+  }
+}
+
+// ===== RENDER CALENDAR =====
+function renderCalendar(){
+  calendar.innerHTML = '';
+  
+  // Door image based on current theme
+  const doorImageUrl = isLightMode ? '3.jpeg' : 'door-night.jpeg';
+  
+  duas.forEach((data, index) => {
+    const door = document.createElement("div");
+    const isOpened = openedDoors.includes(data.day);
+    
+    door.className = `door ${isOpened ? 'opened' : ''}`;
+    door.style.animationDelay = `${index * 0.03}s`;
+    
+    // Door image switches based on theme - bluish for night, brown for day
+    door.innerHTML = `
+      <div class="door-inner">
+        <div class="door-image-container">
+          <img src="${doorImageUrl}" alt="Door ${data.day}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;" onerror="this.style.display='none'">
+          <div class="day-label">${data.day}</div>
+          ${isOpened ? '<span class="check-icon">✓</span>' : ''}
+        </div>
+        <div class="door-opened-content">
+          <div class="door-opened-emoji">${data.emoji}</div>
+          <div class="door-opened-title">${data.title}</div>
+        </div>
+      </div>
+    `;
+    
+    door.onclick = () => {
+      if(!isOpened){
+        // Play spiritual sound
+        playSpiritualChime();
+        
+        // Start animation
+        door.classList.add('opened');
+        
+        // Save to localStorage
+        if(!openedDoors.includes(data.day)){
+          openedDoors.push(data.day);
+          localStorage.setItem('ramadanOpenedDoors', JSON.stringify(openedDoors));
+          updateProgress();
+        }
+        
+        // Show modal after delay
+        setTimeout(() => {
+          openModal(data);
+          
+          // Check if all 30 doors opened
+          if(openedDoors.length === 30){
+            setTimeout(() => {
+              eidCelebration.classList.add('show');
+            }, 1000);
+          }
+        }, 700);
+      } else {
+        // Already opened - just show modal
+        openModal(data);
+      }
+    };
+    
+    calendar.appendChild(door);
+  });
+}
+
+// ===== MODAL FUNCTIONS =====
+function openModal(data){
+  modal.classList.add("show");
+  modal.innerHTML = `
+    <div class="modal-content" id="modalContent">
+      <div class="modal-day-badge">Day ${data.day}</div>
+      <div class="modal-emoji-header">${data.emoji}</div>
+      <div class="modal-spiritual-title">${data.title}</div>
+      <div class="arabic">${data.dua_arabic}</div>
+      <div class="translit">${data.dua_transliteration}</div>
+      <div class="translation">${data.dua_translation}</div>
+      <div class="reflection">
+        <strong>💭 Reflection:</strong> ${data.message}
+      </div>
+      <div class="modal-buttons">
+        <button class="share-btn" onclick="shareDuaAsImage(${data.day})">
+          📤 Share Dua
+        </button>
+        <button class="close-btn" onclick="closeModal()">
+          ✕ Close
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function closeModal(){
+  modal.classList.remove("show");
+}
+
+// ===== SHARE DUA AS IMAGE (Full Card, WhatsApp Only) =====
+async function shareDuaAsImage(day) {
+  const data = duas.find(d => d.day === day);
+  
+  if (typeof html2canvas === 'undefined') {
+    // Fallback to text if html2canvas not available
+    shareDuaText(day);
+    return;
+  }
+  
+  // Get the capture container and card
+  const captureContainer = document.getElementById('duaCardCaptureContainer');
+  const captureCard = document.getElementById('duaCardCapture');
+  
+  if (!captureCard || !captureContainer) {
+    shareDuaText(day);
+    return;
+  }
+  
+  // Populate the capture card with the dua content
+  captureCard.innerHTML = `
+    <div class="modal-day-badge">Day ${data.day}</div>
+    <div class="modal-emoji-header">${data.emoji}</div>
+    <div class="modal-spiritual-title">${data.title}</div>
+    <div class="arabic">${data.dua_arabic}</div>
+    <div class="translit">${data.dua_transliteration}</div>
+    <div class="translation">${data.dua_translation}</div>
+    <div class="reflection">
+      <strong>💭 Reflection:</strong> ${data.message}
+    </div>
+  `;
+  
+  // Apply light mode class if needed
+  if (isLightMode) {
+    captureCard.classList.add('light-mode-capture');
+  } else {
+    captureCard.classList.remove('light-mode-capture');
+  }
+  
+  // Temporarily make container visible for rendering (but off-screen)
+  captureContainer.style.left = '0px';
+  captureContainer.style.position = 'fixed';
+  captureContainer.style.top = '0px';
+  captureContainer.style.zIndex = '-9999';
+  captureContainer.style.opacity = '1';
+  
+  try {
+    // Wait for DOM to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Capture the full card (entire height, no cropping)
+    const canvas = await html2canvas(captureCard, {
+      backgroundColor: isLightMode ? '#f8f4e8' : '#071327',
+      scale: 3, // High resolution
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+      foreignObjectRendering: false,
+      scrollY: 0,
+      scrollX: 0,
+      windowHeight: captureCard.scrollHeight + 100,
+      windowWidth: captureCard.scrollWidth + 40,
+      onclone: function(clonedDoc) {
+        const clonedCard = clonedDoc.getElementById('duaCardCapture');
+        if (clonedCard) {
+          // Ensure all animations are paused on clone
+          clonedCard.style.animation = 'none';
+          clonedCard.style.maxHeight = 'none';
+          clonedCard.style.overflow = 'visible';
+          
+          const allAnimated = clonedCard.querySelectorAll('*');
+          allAnimated.forEach(el => {
+            el.style.animation = 'none';
+          });
+          
+          // Apply theme-specific background
+          if (isLightMode) {
+            clonedCard.style.background = 'linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%)';
+          } else {
+            clonedCard.style.background = 'linear-gradient(145deg, #0d2b5a 0%, #071327 100%)';
+          }
+        }
+      }
+    });
+    
+    // Hide container again
+    captureContainer.style.left = '-9999px';
+    captureContainer.style.position = 'fixed';
+    
+    // Convert to blob
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        shareDuaText(day);
+        return;
+      }
+      
+      // Try Web Share API with files first (this works for WhatsApp on mobile)
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'test.png', { type: 'image/png' })] })) {
+        try {
+          const file = new File([blob], `ramadan-day-${day}.png`, { type: 'image/png' });
+          await navigator.share({
+            files: [file]
+          });
+          return;
+        } catch (e) {
+          // User cancelled or error - fall through to download
+          if (e.name === 'AbortError') {
+            return; // User cancelled
+          }
+        }
+      }
+      
+      // Fallback: download the image
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ramadan-day-${day}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 'image/png', 1.0);
+    
+  } catch (e) {
+    console.error('Error generating dua card image:', e);
+    // Hide container on error
+    captureContainer.style.left = '-9999px';
+    shareDuaText(day);
+  }
+}
+
+// ===== SHARE DUA AS TEXT =====
+function shareDuaText(day){
+  const data = duas.find(d => d.day === day);
+  const message = `🌙 Ramadan Day ${day} - ${data.title}\n\n${data.dua_arabic}\n\n${data.dua_translation}\n\n✨ Ramadan Kareem!`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+}
+
+// ===== COPY DUA =====
+function copyDua(day){
+  const data = duas.find(d => d.day === day);
+  const text = `${data.dua_arabic}\n\n${data.dua_translation}`;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    if (btn) {
+      btn.innerHTML = '✓ Copied!';
+      btn.classList.add('copy-success');
+      setTimeout(() => {
+        btn.innerHTML = '📋 Copy';
+        btn.classList.remove('copy-success');
+      }, 2000);
+    }
+  }).catch(() => {
+    alert('Failed to copy');
+  });
+}
+
+// ===== SHARE FULL CALENDAR =====
+function shareCalendar(){
+  const message = `🌙✨ Ramadan Calendar Journey ✨🌙\n\nI've opened ${openedDoors.length} of 30 doors on my blessed Ramadan journey!\n\nJoin me in this spiritual journey of duas and reflections.\n\n✨ Ramadan Kareem! ✨`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Ramadan Calendar',
+      text: message,
+      url: window.location.href
+    }).catch(() => {
+      navigator.clipboard.writeText(`${message}\n\n${window.location.href}`).then(() => {
+        alert('Calendar link copied to clipboard!');
+      }).catch(() => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+      });
+    });
+  } else {
+    navigator.clipboard.writeText(`${message}\n\n${window.location.href}`).then(() => {
+      alert('Calendar link copied to clipboard!');
+    }).catch(() => {
+      window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    });
+  }
+}
+
+// ===== UPDATE EID NAME =====
+function updateEidName() {
+  const nameInput = document.getElementById('eidNameInput');
+  const fromName = document.getElementById('eidFromName');
+  
+  if (nameInput.value.trim()) {
+    fromName.textContent = `With love, ${nameInput.value.trim()}`;
+  } else {
+    fromName.textContent = '';
+  }
+}
+
+// ===== SHARE EID CARD AS IMAGE =====
+async function shareEidAsImage() {
+  // Check if html2canvas is available
+  if (typeof html2canvas === 'undefined') {
+    shareEidText();
+    return;
+  }
+  
+  // Get the name from input
+  const nameInput = document.getElementById('eidNameInput');
+  const userName = nameInput ? nameInput.value.trim() : '';
+  
+  // Get the capture card and update its content
+  const captureContainer = document.getElementById('eidCardCaptureContainer');
+  const captureCard = document.getElementById('eidCardCapture');
+  const captureName = document.getElementById('eidFromNameCapture');
+  
+  if (!captureCard || !captureContainer) {
+    shareEidText();
+    return;
+  }
+  
+  // Update the name in capture card
+  if (captureName) {
+    captureName.textContent = userName ? `With love, ${userName}` : '';
+  }
+  
+  // Apply light mode class to capture card if needed
+  if (isLightMode) {
+    captureCard.classList.add('light-mode-capture');
+  } else {
+    captureCard.classList.remove('light-mode-capture');
+  }
+  
+  // Temporarily make container visible for rendering (but off-screen)
+  captureContainer.style.left = '0px';
+  captureContainer.style.position = 'fixed';
+  captureContainer.style.top = '0px';
+  captureContainer.style.zIndex = '-9999';
+  captureContainer.style.opacity = '1';
+  
+  try {
+    // Wait for DOM to update
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Capture the card
+    const canvas = await html2canvas(captureCard, {
+      backgroundColor: isLightMode ? '#f8f4e8' : '#071327',
+      scale: 3, // Higher resolution
+      useCORS: true,
+      logging: false,
+      allowTaint: true,
+      foreignObjectRendering: false,
+      // Ensure the element is rendered properly
+      onclone: function(clonedDoc) {
+        const clonedCard = clonedDoc.getElementById('eidCardCapture');
+        if (clonedCard) {
+          // Ensure all animations are paused on clone
+          clonedCard.style.animation = 'none';
+          const allAnimated = clonedCard.querySelectorAll('*');
+          allAnimated.forEach(el => {
+            el.style.animation = 'none';
+          });
+          
+          // Apply theme-specific background
+          if (isLightMode) {
+            clonedCard.style.background = 'linear-gradient(145deg, #f8f4e8 0%, #ebe5d5 100%)';
+          } else {
+            clonedCard.style.background = 'linear-gradient(145deg, #0d2b5a 0%, #071327 100%)';
+          }
+        }
+      }
+    });
+    
+    // Hide container again
+    captureContainer.style.left = '-9999px';
+    captureContainer.style.position = 'fixed';
+    
+    // Convert to blob
+    canvas.toBlob(async (blob) => {
+      if (!blob) {
+        shareEidText();
+        return;
+      }
+      
+      const nameSuffix = userName ? `-${userName.replace(/\s+/g, '-')}` : '';
+      
+      // Try Web Share API first
+      if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'test.png', { type: 'image/png' })] })) {
+        try {
+          const file = new File([blob], `eid-mubarak${nameSuffix}.png`, { type: 'image/png' });
+          await navigator.share({
+            files: [file]
+          });
+          return;
+        } catch (e) {
+          // User cancelled or error - fall through to download
+          if (e.name === 'AbortError') {
+            return; // User cancelled, don't download
+          }
+        }
+      }
+      
+      // Fallback: download the image
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `eid-mubarak${nameSuffix}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 'image/png', 1.0);
+    
+  } catch (e) {
+    console.error('Error generating Eid card image:', e);
+    // Hide container on error
+    captureContainer.style.left = '-9999px';
+    shareEidText();
+  }
+}
+
+// ===== SHARE EID AS TEXT (FALLBACK) =====
+function shareEidText(){
+  const nameInput = document.getElementById('eidNameInput');
+  const nameText = nameInput.value.trim() ? `\n\nWith love, ${nameInput.value.trim()}` : '';
+  const message = `🌙✨ Eid Mubarak! ✨🌙\n\nعيد الفطر مبارك\n\nMay Allah accept all your prayers, fasts, and good deeds during this blessed month.\n\n✨ Wishing you peace, happiness, and countless blessings ✨${nameText}`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Eid Mubarak!',
+      text: message
+    }).catch(() => {
+      navigator.clipboard.writeText(message).then(() => {
+        alert('Eid message copied to clipboard!');
+      });
+    });
+  } else {
+    navigator.clipboard.writeText(message).then(() => {
+      alert('Eid message copied to clipboard!');
+    });
+  }
+}
+
+function closeEidCelebration(){
+  eidCelebration.classList.remove('show');
+  localStorage.setItem('ramadanEidShown', 'true');
+  eidShown = true;
+}
+
+// ===== PROGRESS =====
+function updateProgress(){
+  const count = openedDoors.length;
+  const percentage = (count / 30) * 100;
+  
+  progressFill.style.width = percentage + "%";
+  progressText.textContent = `${count} of 30 doors opened`;
+  
+  if(count === 30){
+    progressText.textContent = "🎉 All 30 doors opened! Eid Mubarak!";
+  }
+}
+
+// ===== THEME TOGGLE =====
+function toggleTheme(){
+  isLightMode = !isLightMode;
+  document.body.classList.toggle('light-mode', isLightMode);
+  localStorage.setItem('ramadanTheme', isLightMode ? 'light' : 'dark');
+  updateThemeButton();
+  // Re-render calendar to switch door images based on theme
+  renderCalendar();
+}
+
+function updateThemeButton(){
+  const btn = document.querySelector('.theme-toggle');
+  if(isLightMode){
+    btn.innerHTML = '<span>🌙</span><span>Night Mode</span>';
+  } else {
+    btn.innerHTML = '<span>☀️</span><span>Day Mode</span>';
+  }
+}
+
+// ===== RESET =====
+function resetProgress(){
+  // Show the custom confirmation modal
+  document.getElementById('resetConfirmModal').classList.add('show');
+}
+
+function closeResetConfirm(){
+  document.getElementById('resetConfirmModal').classList.remove('show');
+}
+
+function confirmReset(){
+  // Close the modal
+  closeResetConfirm();
+  
+  // Reset all progress
+  openedDoors = [];
+  eidShown = false;
+  localStorage.setItem('ramadanOpenedDoors', JSON.stringify(openedDoors));
+  localStorage.setItem('ramadanEidShown', 'false');
+  renderCalendar();
+  updateProgress();
+}
+
+// ===== WELCOME =====
+function closeWelcome(){
+  welcomeModal.classList.remove('show');
+  localStorage.setItem('ramadanWelcome', 'true');
+  hasSeenWelcome = true;
+}
+
+// ===== EVENT LISTENERS =====
+modal.addEventListener('click', (e) => {
+  if(e.target === modal) closeModal();
+});
+
+eidCelebration.addEventListener('click', (e) => {
+  if(e.target === eidCelebration) closeEidCelebration();
+});
+
+document.getElementById('resetConfirmModal').addEventListener('click', (e) => {
+  if(e.target === document.getElementById('resetConfirmModal')) closeResetConfirm();
+});
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape'){
+    closeModal();
+    closeEidCelebration();
+    closeResetConfirm();
+    if(welcomeModal.classList.contains('show')) closeWelcome();
+  }
+});
+
+// ===== START =====
+init();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(() => console.log("Service Worker Registered"))
+      .catch(err => console.log("SW registration failed:", err));
+  });
+}
+</script>
+
+</body>
+</html>
